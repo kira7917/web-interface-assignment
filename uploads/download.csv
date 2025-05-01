@@ -1,0 +1,4 @@
+Order Date,ONDC Order ID,Restaurant Name,Restaurant ID,Locality,Order Status,Order Total,Copay,Copay Amount,Net Bill Value,Total Container Charge,Total GST,Commission %,GST on commission %,TCS,TDS,GF Platform Fee,GST on GF Platform Fee,Self Delivery Charges,Delivery Discount,Total Payable to Merchant
+2025-03-03T07:03:01.159Z,GF3466659295,DILLI CHAAT,GFFBRTDI1726752027,Pattandur agrahar,Completed,303.36,,0,190,30,11.02,8,18%,0,0.22,24.27,4.37,0,0,191.14
+2025-03-03T11:49:30.836Z,GF4639581223,DILLI CHAAT,GFFBRTDI1726752027,"Nallurhalli, Whitefield Bangalore",Completed,409.88,,0,220,90,15.54,8,18%,0,0.31,32.79,5.9,0,0,271.0
+2025-03-03T12:22:23.367Z,GF2090321206,DILLI CHAAT,GFFBRTDI1726752027,Channasandra,Completed,227.36,,0,140,20,8.02,8,18%,0,0.16,18.19,3.27,0,0,138.38

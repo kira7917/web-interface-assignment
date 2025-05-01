@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+  <title>CSV Manager</title>
+    <style>
+    body {
+        font-family: 'Arial', sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      display: flex;    
+        flex-direction: column;
+      align-items: center;
+        min-height: 100vh;
+    }
+
+    header {
+        background-color: #3498db;
+        color: #fff;
+        padding: 1rem;
+        text-align: center;
+        width: 100%;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 2.5rem;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      margin: 0;
+    }
+
+    #logo {
+        width: 100px;
+        height: 50px; 
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      width: 90%;
+      max-width: 800px;
+      text-align: center;
+        margin-top: 20px;
+    }
+
+    .filter-inputs {
+        display: flex;
+        gap: 10px;
+    }
+    .email-inputs{
+        display: flex;
+    }
+
+    button {
+      background-color: #3498db;
+      color: #fff;
+      padding: 10px 20px;
+      margin: 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    input[type="file"],
+    input[type="text"],
+    input[type="date"],
+    input[type="email"] {
+      padding: 10px;
+      margin: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+      width: calc(100% - 22px);
+      max-width: 300px;
+      box-sizing: border-box;
+    }
+
+    .data-container {
+      margin-top: 20px;
+      width: 90%;
+      max-width: 800px;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .data-table th,
+    .data-table td {
+        border: 1px solid #ddd;
+        padding: 12px 15px;
+        text-align: left;
+    }
+
+    .data-table th {
+        background-color: #f0f0f0;
+        font-weight: bold;
+        color: #333;
+    }
+
+        .data-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .section-header {
+            text-align: left;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .pagination-button {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;            
+            cursor: pointer;
+        }
+  </style>
+        
+            
+        </head>
+<body>
+    <header>
+        <img id="logo"
+             src="https://img.freepik.com/free-vector/document-icon-design-vector_53876-128906.jpg" alt="Logo"/>
+        <h1>CSV Manager</h1>
+    </header>
+    
+        
+    <div class="container">
+    <input type="file" id="fileUpload" />
+
+    <button id="uploadButton">Upload</button>
+        </div>
+    <div class="container">
+        <div class="filter-inputs">
+            <input type="text" id="restaurantName" placeholder="Restaurant Name" />
+        <input type="date" id="date" />
+        </div>
+
+        <button id="displayButton">Display</button>
+
+        <div class="email-inputs">
+            <input type="email" id="emailAddress" placeholder="Email Address" />
+            <button id="emailButton">Send Email</button>
+        </div>
+
+
+        <button id="downloadButton">Download</button>
+        <button id="deleteButton">Delete</button>
+    </div>
+
+    <h2 class="section-header">Data Display</h2>
+    <div id="response" class="data-container"></div>
+    <div class="pagination-container">
+        <div id="pageCounter"></div>
+        <div id="page-counter-container">
+            
+        </div>
+
+
+        <button id="nextButton" class="pagination-button">Next</button>
+    </div>
+
+
+    <script>
+      const uploadButton = document.getElementById("uploadButton");
+      const displayButton = document.getElementById("displayButton");
+      const emailButton = document.getElementById("emailButton");
+      const downloadButton = document.getElementById("downloadButton");
+      const deleteButton = document.getElementById("deleteButton");
+      const fileInput = document.getElementById("fileUpload");
+      const restaurantInput = document.getElementById("restaurantName");
+      const dateInput = document.getElementById("date");
+      const emailInput = document.getElementById("emailAddress");
+      const responseDiv = document.getElementById("response");
+        const previousButton = document.getElementById("previousButton");
+        const pageCounter = document.getElementById("page-counter");
+        const nextButton = document.getElementById("nextButton");
+        const rowsPerPage = 5;
+        let currentPage = 1;
+      
+      function handleResponse(res) {
+        if (typeof res === "string" && res.startsWith("Error")) {
+          responseDiv.innerHTML = `<p>${res}</p>`;
+            return;
+          }
+          if (typeof res === "string") {
+              responseDiv.innerHTML = `<p>${res}</p>`;
+              return;
+          }
+          if (Array.isArray(res)) {
+                let table = "<table class='data-table'>";
+                const headers = res[0];
+                const rows = res.slice(1);
+
+                table += "<thead><tr>";
+                for (const header of headers) {
+                    table += `<th>${header}</th>`;
+                }
+                table += "</tr></thead><tbody>";
+
+                for (const row of rows) {
+                    table += `<tr>${row.map((item) => `<td>${item}</td>`).join("")}</tr>`;
+                }
+                table += "</tbody></table>";
+                responseDiv.innerHTML = table;
+            } else if (typeof res === "object") {
+                const htmlTable = res.table;
+                responseDiv.innerHTML = htmlTable;
+                currentPage = res.currentPage;
+                const totalPages = res.totalPages;
+                pageCounter.textContent = `Page ${res.currentPage} of ${totalPages}`;
+                nextButton.disabled = currentPage >= totalPages;
+          }        
+      };
+
+        previousButton.addEventListener("click", () => {
+            if (currentPage > 1) {
+                currentPage--;
+                updateData(currentPage);
+        }});
+
+        nextButton.addEventListener("click", () => {
+            currentPage++;            
+            updateData(currentPage);
+        });
+
+        function updateData() {
+
+            const restaurant = restaurantInput.value;
+            const date = dateInput.value;
+
+            fetch(`/display?restaurant=${restaurant}&date=${date}&page=${currentPage}`)                
+                .then(response => response.text())
+                .then(data => {
+                  responseDiv.innerHTML = data
+                    const totalPagesMatch = data.match(/of (\d+)/);
+                    if (totalPagesMatch && totalPagesMatch.length > 1) {
+                        const totalPages = parseInt(totalPagesMatch[1], 10);
+                        const currentPageMatch = data.match(/Page (\d+)/);
+                        const currentPage = currentPageMatch && currentPageMatch.length > 1 ? parseInt(currentPageMatch[1], 10): 1;
+                         pageCounter.textContent = `Page ${currentPage} of ${totalPages}`;
+                        previousButton.disabled = currentPage <= 1;
+                        nextButton.disabled = currentPage >= totalPages;
+                  }
+                });
+        }
+
+        uploadButton.addEventListener("click", () => {
+            const file = fileInput.files[0];
+            currentPage = 1;
+            if (!file) {
+                handleResponse("Please select a file to upload.");
+                return;
+            }
+            const formData = new FormData();
+            formData.append("file", file);
+            fetch("/upload", {
+                        method: "POST",
+                        body: formData,
+                    })
+                .then((res) => res.text())
+                .then((data) => handleResponse(data));
+        });
+
+        displayButton.addEventListener("click", () => {
+            currentPage = 1;
+            const restaurant = restaurantInput.value;
+            const date = dateInput.value;
+            updateData();
+        });
+
+
+      emailButton.addEventListener("click", () => {
+        const email = emailInput.value;
+        fetch(`/email?email=${email}`)
+                  .then((res) => res.text())
+          .then((data) => handleResponse(data))
+          .catch((err) => handleResponse(err.toString()));
+      });
+
+      downloadButton.addEventListener("click", () => {
+        const restaurant = restaurantInput.value;
+        const date = dateInput.value;
+        const url = `/download?restaurant=${restaurant}&date=${date}`;
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'download.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+
+
+      deleteButton.addEventListener("click", () => {
+        const restaurant = restaurantInput.value;
+        const date = dateInput.value;
+        fetch(`/delete?restaurant=${restaurant}&date=${date}`)
+                .then((res) => {
+                    if (!res.ok) {
+                        return res.text().then(text => {
+                            throw new Error(text || "Network response was not ok");
+            });
+          }
+          return res.text();
+        }).then((data) => handleResponse(data.trim())).catch((err) => {
+          handleResponse(err.toString());
+        });
+      });
+    </script>
+  </body>
+</html>
