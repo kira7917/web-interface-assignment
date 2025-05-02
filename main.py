@@ -79,13 +79,13 @@ def delete_row(filename, restaurant_name, date_to_delete):
       return f"Data for restaurant '{deleted_row['Restaurant Name']}' on '{deleted_row['Order Date']}' deleted successfully."
     return f"There is no data for restaurant '{restaurant_name}' on '{date_to_delete}'."
 def download_csv(output_file, data):
-    header = ["Order Date","ONDC Order ID","Restaurant Name","Restaurant ID","Locality","Order Status","Order Total","Copay","Copay Amount","Net Bill Value","Total Container Charge","Total GST","Commission %","GST on commission %","TCS","TDS","GF Platform Fee","GST on GF Platform Fee","Self Delivery Charges","Delivery Discount","Total Payable to Merchant"]
-    
+    """Writes the data to the CSV file."""
+    if not data:  # Check if data is empty
+        return
     with open(output_file, 'w', newline='', encoding='utf-8') as file:
-        writer = csv.DictWriter(file, fieldnames=header)  # Use DictWriter
-        writer.writeheader()  # Write the header row
-        for row in data:
-          writer.writerow(row)  # Write each row
+        writer = csv.DictWriter(file, fieldnames=data[0].keys())
+        writer.writeheader()
+        writer.writerows(data)
 
 def send_email(message, to_email, subject):
     """
@@ -140,11 +140,11 @@ def daily_summary(filename):
     amount_index = -1
     restaurant_index = -1    
     if 'order date' in header:
-      order_date_index = header.index('order date')
+      order_date_index = header.get('order date', -1)
     if 'total payable to merchant' in header:
-      amount_index = header.index('total payable to merchant')
+      amount_index = header.get('total payable to merchant',-1)
     if 'restaurant name' in header:
-      restaurant_index = header.index('restaurant name')
+      restaurant_index = header.get('restaurant name',-1)
 
     if order_date_index == -1:
         return "Error: Order Date column not found."
@@ -310,13 +310,18 @@ def download():
       return "Error: Restaurant Name or Order Date column not found."
 
     filtered_data = []
+    headers_list = list(header.keys())
     for row in data[1:]:
         try:
-          row_date_str = row[order_date_index]
+          row_date_str = row[header.get('order date')]
           row_date_obj = datetime.datetime.fromisoformat(row_date_str.replace("Z", "+00:00"))
           row_date = row_date_obj.date().isoformat()
-          if row[restaurant_index].strip().lower() == restaurant.strip().lower() and row_date == date:
-            filtered_data.append(row)
+          if row[header.get('restaurant name')].strip().lower() == restaurant.strip().lower() and row_date == date:
+            new_row={}
+            for key in headers_list:
+                index=header.get(key)
+                new_row[key]=row[index]
+            filtered_data.append(new_row)
         except ValueError:
           return "Error: Invalid date format."
           
